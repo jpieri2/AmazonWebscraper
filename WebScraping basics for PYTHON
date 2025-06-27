@@ -1,0 +1,131 @@
+WebScraping basics for PYTHON
+
+from bs4 import BeautifulSoup
+import requests
+"""from bs4 import BeautifulSoup: Imports the BeautifulSoup class from the bs4 library, which is used for parsing and navigating HTML and XML documents.
+import requests: Imports the requests library, which is used for making HTTP requests to websites and fetching their content."""
+
+URL = "https://example.com"  # Replace with your actual URL
+"""URL: A string variable storing the web address you want to scrape. This should be replaced with the actual webpage URL you're targeting."""
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',
+    'Accept-Language': 'en-US, en;q=0.5'
+}
+"""HEADERS: A dictionary containing HTTP headers.
+
+    'User-Agent': Identifies the browser making the request. Websites can block requests that don't mimic a browser, so this makes the request appear more like a regular web browser.
+    'Accept-Language': Specifies the preferred language for the content being requested (en-US means U.S. English)."""
+
+  """webpage = requests.get(URL, headers=HEADERS)
+requests.get(URL, headers=HEADERS): Makes an HTTP GET request to the specified URL using the custom headers provided.
+webpage: The response object returned from the server, containing the webpage content and metadata."""
+
+soup = BeautifulSoup(webpage.content, "lxml")
+"""BeautifulSoup(webpage.content, "lxml"): Parses the HTML content from the response using the lxml parser.
+soup: A BeautifulSoup object representing the structured HTML content of the page, allowing for easy data extraction."""
+
+with open("out.csv", "a") as file:
+    file.write("Scraped Data\n")
+"""with open("out.csv", "a") as file:: Opens the file out.csv in append mode ("a"), which means new data will be added to the end of the file without deleting its existing contents.
+file.write("Scraped Data\n"): Writes the string "Scraped Data" followed by a newline (\n) to the file. This is just a placeholder; you would replace this with actual data extracted from the webpage."""
+
+Summary of What the Code Does:
+
+    Import necessary libraries (BeautifulSoup and requests).
+    Define the URL of the page to scrape.
+    Set headers to mimic a browser request.
+    Send an HTTP GET request to the website.
+    Parse the webpage content using BeautifulSoup.
+    Open a CSV file and write a header (for demonstration).
+
+
+
+    try:
+        price_value = soup.find("span", attrs={'id' : 'priceblock_ourprice'})
+
+        if price_value:
+            price = price_value.get_text(strip=True).replace(',','')
+
+        else:
+            price = "NA"
+
+    except: AttributeError:
+        price = "NA"
+
+    file.write(f{"price"})
+
+
+
+
+
+
+****
+
+Understanding the Code:
+
+try:
+    rating = soup.find("i", attrs={
+                       'class': 'a-icon a-icon-star a-star-4-5'}).string.strip().replace(',', '')
+
+except AttributeError:
+    try:
+        rating = soup.find(
+            "span", attrs={'class': 'a-icon-alt'}).string.strip().replace(',', '')
+    except:
+        rating = "NA"
+        
+print("Overall rating = ", rating)
+File.write(f"{rating},")
+
+✅ Why a Nested try...except is Used:
+
+    Multiple Possible Elements for Rating:
+        The rating might be stored in different elements depending on the product listing page design.
+        First Attempt:
+            Looks for an <i> tag with the class 'a-icon a-icon-star a-star-4-5'.
+        Second Attempt (if the first fails):
+            Looks for a <span> tag with the class 'a-icon-alt' instead.
+
+Example HTML Variations:
+
+Option 1: <i class="a-icon a-icon-star a-star-4-5">4.5 out of 5 stars</i>
+
+Option 2:
+
+<span class="a-icon-alt">4.5 out of 5 stars</span>
+
+✅ Best Practice:
+
+    Avoid Bare except: Using a generic except: can catch unintended errors.
+    Use .get_text() Instead of .string: .string can fail if the tag has nested elements.
+
+✅ Improved Version:
+
+try:
+    rating_element = soup.find("i", attrs={'class': 'a-icon a-icon-star a-star-4-5'})
+    if rating_element:
+        rating = rating_element.get_text(strip=True).replace(',', '')
+    else:
+        raise AttributeError  # Forces the next block to run if rating not found
+
+except AttributeError:
+    try:
+        rating_element = soup.find("span", attrs={'class': 'a-icon-alt'})
+        rating = rating_element.get_text(strip=True).replace(',', '') if rating_element else "NA"
+    except AttributeError:
+        rating = "NA"
+
+print("Overall rating =", rating)
+File.write(f"{rating},")
+
+Key Fixes and Improvements:
+
+    Avoided Bare except.
+    Replaced .string with .get_text(strip=True) for reliability.
+    Forced the second try block only if the first fails using raise AttributeError.
+
+✅ Why This is Important:
+
+    HTML Variability: Websites, especially e-commerce sites like Amazon, often change their HTML structure.
+    Flexible Scraping: Nested try...except blocks allow the code to check multiple patterns before failing completely.
